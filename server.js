@@ -3,7 +3,8 @@ const {
     default: makeWASocket, 
     useMultiFileAuthState, 
     DisconnectReason, 
-    makeCacheableSignalKeyStore 
+    makeCacheableSignalKeyStore,
+    fetchLatestBaileysVersion
 } = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const fs = require('fs');
@@ -11,55 +12,66 @@ const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// دالة لتنظيف الرقم
+const formatNumber = (num) => {
+    let cleaned = num.replace(/[^0-9]/g, '');
+    return cleaned;
+};
+
 async function startFaresBot() {
-    // تحديد مجلد الجلسة - هذا هو المكان الذي تُحفظ فيه بيانات الربط
-    const { state, saveCreds } = await useMultiFileAuthState('session_data');
+    // استخدام مجلد مؤقت للتخزين في Render لتجنب مشاكل الصلاحيات
+    const { state, saveCreds } = await useMultiFileAuthState('./auth_info_baileys');
+    const { version } = await fetchLatestBaileysVersion();
 
     const sock = makeWASocket({
+        version,
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
         },
         printQRInTerminal: false,
         logger: pino({ level: "silent" }),
-        // التعريف المهم جداً لقبول الكود
-        browser: ["Ubuntu", "Chrome", "20.0.04"], 
+        // تعريف متصفح قوي لضمان وصول الإشعار
+        browser: ["Mac OS", "Chrome", "10.15.7"], 
     });
 
-    // حفظ التغييرات في الجلسة تلقائياً
     sock.ev.on('creds.update', saveCreds);
 
-    // إدارة الاتصال
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect } = update;
         if (connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startFaresBot();
         } else if (connection === 'open') {
-            console.log('✅ تم ربط فارس بوت بنجاح!');
+            console.log('✅ متصل الآن!');
         }
     });
 
-    // استقبال طلبات الربط من الموقع
+    // المسار الرئيسي للتأكد من عمل السيرفر
+    app.get('/', (req, res) => {
+        res.send('<h1>سيرفر بوت فارس التميمي يعمل بنجاح ✅</h1>');
+    });
+
+    // مسار طلب الكود المحدث
     app.get('/pair', async (req, res) => {
         let num = req.query.number;
         if (!num) return res.status(400).json({ error: "الرجاء إدخال الرقم" });
 
         try {
-            // تنظيف الرقم من أي رموز زائدة
-            num = num.replace(/[^0-9]/g, '');
+            const formattedNum = formatNumber(num);
+            // تأخير بسيط لضمان استقرار الجلسة قبل الطلب
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
-            // طلب كود الربط من واتساب
-            let code = await sock.requestPairingCode(num);
+            let code = await sock.requestPairingCode(formattedNum);
             res.json({ code: code });
         } catch (err) {
-            console.error(err);
-            res.status(500).json({ error: "فشل طلب الكود.. تأكد من حالة السيرفر" });
+            console.error("خطأ في طلب الكود:", err);
+            res.status(500).json({ error: "حدث خطأ أثناء الاتصال بواتساب. جرب إعادة تشغيل السيرفر." });
         }
     });
 }
 
 app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(`Server is running on port ${port}`);
     startFaresBot();
 });
