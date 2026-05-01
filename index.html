@@ -1,37 +1,129 @@
-async function handleSubmit() {
-    const numberInput = document.getElementById('phone-number');
-    const phoneNumber = numberInput.value.replace(/[^0-9]/g, ''); // تنظيف الرقم
-    
-    if (!phoneNumber) {
-        return Swal.fire('خطأ', 'يرجى إدخال رقم الهاتف بشكل صحيح', 'error');
-    }
-
-    const submitBtn = document.querySelector('.submit-btn');
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'جاري طلب الكود...';
-
-    try {
-        // نرسل الطلب إلى رابط سيرفر Render الخاص بك
-        const response = await fetch(`${apiBaseUrl}/pair?number=${phoneNumber}`);
-        const data = await response.json();
-
-        if (data.code) {
-            // عرض الكود للمستخدم بشكل جميل
-            Swal.fire({
-                title: 'كود الربط الخاص بك',
-                html: `<b style="font-size: 30px; color: #d4af37;">${data.code}</b>`,
-                icon: 'success',
-                confirmButtonText: 'نسخ الكود'
-            }).then(() => {
-                navigator.clipboard.writeText(data.code);
-            });
-        } else {
-            throw new Error(data.error || 'فشل الحصول على الكود');
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 بوابة ربط فارس بوت</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
-    } catch (error) {
-        Swal.fire('خطأ في الاتصال', 'تأكد أن السيرفر يعمل وحاول مجدداً', 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'الحصول على الكود';
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+        }
+        h1 { color: #d4af37; margin-bottom: 10px; font-size: 28px; }
+        p { color: #ccc; margin-bottom: 30px; }
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: 1px solid #d4af37;
+            background: #000;
+            color: #fff;
+            font-size: 18px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .submit-btn {
+            background: linear-gradient(45deg, #d4af37, #f9f295);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+        .submit-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px #d4af37; }
+        .submit-btn:disabled { background: #555; cursor: not-allowed; }
+        .footer { margin-top: 20px; font-size: 12px; color: #777; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>👑 فارس بوت</h1>
+    <p>أدخل رقم هاتفك بالصيغة الدولية للحصول على كود الربط</p>
+    
+    <input type="text" id="phone-number" placeholder="مثال: 9665xxxxxxxx" dir="ltr">
+    
+    <button class="submit-btn" onclick="handleSubmit()">الحصول على كود الربط</button>
+    
+    <div class="footer">تم البرمجة بواسطة فارس التميمي</div>
+</div>
+
+<script>
+    // الرابط الذي قمت بإنشائه أنت على Render
+    const apiBaseUrl = 'https://fares-bot.onrender.com';
+
+    async function handleSubmit() {
+        const numberInput = document.getElementById('phone-number');
+        let phoneNumber = numberInput.value.replace(/[^0-9]/g, '');
+        
+        if (!phoneNumber) {
+            return Swal.fire({ icon: 'error', title: 'خطأ', text: 'يرجى إدخال رقم الهاتف بشكل صحيح' });
+        }
+
+        const submitBtn = document.querySelector('.submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'جاري الاتصال بالسيرفر...';
+
+        try {
+            // المحاولة مع مسار /pair كما هو مبرمج في server.js
+            const response = await fetch(`${apiBaseUrl}/pair?number=${phoneNumber}`);
+            
+            if (!response.ok) throw new Error('السيرفر لا يستجيب');
+
+            const data = await response.json();
+
+            if (data.code) {
+                Swal.fire({
+                    title: 'كود الربط الخاص بك',
+                    html: `<p style="font-size: 14px; color: #555;">قم بنسخ هذا الكود ووضعه في الواتساب</p>
+                           <b style="font-size: 40px; color: #d4af37; letter-spacing: 5px;">${data.code}</b>`,
+                    icon: 'success',
+                    confirmButtonText: 'نسخ الكود'
+                }).then(() => {
+                    navigator.clipboard.writeText(data.code);
+                });
+            } else {
+                throw new Error(data.error || 'فشل الحصول على الكود');
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire({
+                icon: 'error',
+                title: 'خطأ في الاتصال',
+                text: 'تأكد أن السيرفر يعمل (قد يستغرق Render دقيقة للاستيقاظ)'
+            });
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'الحصول على كود الربط';
+        }
     }
-}
+</script>
+
+</body>
+</html>
+
