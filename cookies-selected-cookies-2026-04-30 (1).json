@@ -1,0 +1,142 @@
+[
+  {
+    "name": "prism_28990010",
+    "value": "5db43e83-b88c-43da-9051-bf3fb6b5375c",
+    "domain": "prism.app-us1.com",
+    "path": "/",
+    "expires": 1780084911.131721,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "sa-user-id",
+    "value": "s%3A0-c6b2b2d7-e3c1-571b-6f36-3911f8c5e28d.mfGrTBisPbdgMV%2B4%2BDHZsAYBhhVrN86nwx6poG4C21Y",
+    "domain": "sync.srv.stackadapt.com",
+    "path": "/",
+    "expires": 1809016930.452735,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "sa-user-id",
+    "value": "s%3A0-c6b2b2d7-e3c1-571b-6f36-3911f8c5e28d.mfGrTBisPbdgMV%2B4%2BDHZsAYBhhVrN86nwx6poG4C21Y",
+    "domain": ".srv.stackadapt.com",
+    "path": "/",
+    "expires": 1809016930.452923,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "sa-user-id-v2",
+    "value": "s%3AxrKy1-PBVxtvNjkR-MXijZbkC70.Ps73h68OD9TAQXWRZbfhD3b5%2BfFeSbyVNPO34b%2Bh5ZU",
+    "domain": "sync.srv.stackadapt.com",
+    "path": "/",
+    "expires": 1809016930.453007,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "sa-user-id-v2",
+    "value": "s%3AxrKy1-PBVxtvNjkR-MXijZbkC70.Ps73h68OD9TAQXWRZbfhD3b5%2BfFeSbyVNPO34b%2Bh5ZU",
+    "domain": ".srv.stackadapt.com",
+    "path": "/",
+    "expires": 1809016930.453204,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "sa-user-id-v3",
+    "value": "s%3AAQAKIBntoi5b629jW4UZI3izxFcjy8k24Hj-CjPr2o4p4JJIEAIYAyDi6cjPBjABOgQbBS5qQgQ1_W7I.a7dsvI6pabTGttFuxdPlIJQN6GxovFHMRLGrA4J8X9E",
+    "domain": "sync.srv.stackadapt.com",
+    "path": "/",
+    "expires": 1809016930.453281,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "sa-user-id-v3",
+    "value": "s%3AAQAKIBntoi5b629jW4UZI3izxFcjy8k24Hj-CjPr2o4p4JJIEAIYAyDi6cjPBjABOgQbBS5qQgQ1_W7I.a7dsvI6pabTGttFuxdPlIJQN6GxovFHMRLGrA4J8X9E",
+    "domain": ".srv.stackadapt.com",
+    "path": "/",
+    "expires": 1809016930.453355,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "TapAd_3WAY_SYNCS",
+    "value": "",
+    "domain": ".tapad.com",
+    "path": "/",
+    "expires": 1782664934.839517,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "TapAd_DID",
+    "value": "c7d04938-7581-415a-b790-464841927836",
+    "domain": ".tapad.com",
+    "path": "/",
+    "expires": 1782664934.839456,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "TapAd_TS",
+    "value": "1777480933662",
+    "domain": ".tapad.com",
+    "path": "/",
+    "expires": 1782664934.839316,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "uid_id2",
+    "value": "c427768b-6da7-4a0c-b2ec-5f3a39793698:3:1",
+    "domain": "sourshaped.com",
+    "path": "/",
+    "expires": 1778097731.528822,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "no_restriction"
+  },
+  {
+    "name": "wa_lang_pref",
+    "value": "ar",
+    "domain": ".whatsapp.com",
+    "path": "/",
+    "expires": 1778137175.416706,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "lax"
+  },
+  {
+    "name": "wa_ul",
+    "value": "a5ca8125-d666-4c12-a0b9-236fe72330a7",
+    "domain": ".api.whatsapp.com",
+    "path": "/send",
+    "expires": 1785356433.472193,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "lax"
+  },
+  {
+    "name": "wa_ul",
+    "value": "147951d3-ec34-40d9-aeef-4c79b5ed9c48",
+    "domain": ".www.whatsapp.com",
+    "path": "/",
+    "expires": 1785308375.416948,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "lax"
+  }
+]
