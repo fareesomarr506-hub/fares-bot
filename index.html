@@ -1,0 +1,37 @@
+async function handleSubmit() {
+    const numberInput = document.getElementById('phone-number');
+    const phoneNumber = numberInput.value.replace(/[^0-9]/g, ''); // تنظيف الرقم
+    
+    if (!phoneNumber) {
+        return Swal.fire('خطأ', 'يرجى إدخال رقم الهاتف بشكل صحيح', 'error');
+    }
+
+    const submitBtn = document.querySelector('.submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'جاري طلب الكود...';
+
+    try {
+        // نرسل الطلب إلى رابط سيرفر Render الخاص بك
+        const response = await fetch(`${apiBaseUrl}/pair?number=${phoneNumber}`);
+        const data = await response.json();
+
+        if (data.code) {
+            // عرض الكود للمستخدم بشكل جميل
+            Swal.fire({
+                title: 'كود الربط الخاص بك',
+                html: `<b style="font-size: 30px; color: #d4af37;">${data.code}</b>`,
+                icon: 'success',
+                confirmButtonText: 'نسخ الكود'
+            }).then(() => {
+                navigator.clipboard.writeText(data.code);
+            });
+        } else {
+            throw new Error(data.error || 'فشل الحصول على الكود');
+        }
+    } catch (error) {
+        Swal.fire('خطأ في الاتصال', 'تأكد أن السيرفر يعمل وحاول مجدداً', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'الحصول على الكود';
+    }
+}
