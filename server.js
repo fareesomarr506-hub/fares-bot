@@ -2,75 +2,64 @@ const express = require('express');
 const { 
     default: makeWASocket, 
     useMultiFileAuthState, 
-    delay, 
-    makeCacheableSignalKeyStore,
-    Browsers
+    DisconnectReason, 
+    makeCacheableSignalKeyStore 
 } = require("@whiskeysockets/baileys");
 const pino = require("pino");
-const cors = require("cors");
-const fs = require("fs");
+const fs = require('fs');
 
 const app = express();
-app.use(cors());
+const port = process.env.PORT || 3000;
 
-const PORT = process.env.PORT || 3000;
+async function startFaresBot() {
+    // تحديد مجلد الجلسة - هذا هو المكان الذي تُحفظ فيه بيانات الربط
+    const { state, saveCreds } = await useMultiFileAuthState('session_data');
 
-async function getPairingCode(req, res) {
-    let phone = req.query.number || req.query.code;
-    if (!phone) return res.status(400).json({ error: 'يرجى إدخال رقم الهاتف' });
+    const sock = makeWASocket({
+        auth: {
+            creds: state.creds,
+            keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
+        },
+        printQRInTerminal: false,
+        logger: pino({ level: "silent" }),
+        // التعريف المهم جداً لقبول الكود
+        browser: ["Ubuntu", "Chrome", "20.0.04"], 
+    });
 
-    // تنظيف الرقم لضمان الصيغة الدولية الصحيحة
-    phone = phone.replace(/[^0-9]/g, '');
+    // حفظ التغييرات في الجلسة تلقائياً
+    sock.ev.on('creds.update', saveCreds);
 
-    try {
-        // استخدام مجلد مؤقت فريد لكل عملية ربط لتجنب تداخل الجلسات
-        const authPath = `./auth/${phone}_${Date.now()}`;
-        const { state, saveCreds } = await useMultiFileAuthState(authPath);
-
-        const socket = makeWASocket({
-            auth: {
-                creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" })),
-            },
-            printQRInTerminal: false,
-            logger: pino({ level: "fatal" }),
-            // التعديل الجديد: تعريف المتصفح ليظهر كجهاز Chrome على نظام Ubuntu
-            // هذا يقلل من احتمالية رفض واتساب لعملية الربط
-            browser: Browsers.appropriate('Chrome'),
-            syncFullHistory: false
-        });
-
-        if (!socket.authState.creds.registered) {
-            // انتظار بسيط لضمان تهيئة السيرفر داخلياً
-            await delay(3000); 
-            const code = await socket.requestPairingCode(phone);
-            
-            if (!res.headersSent) {
-                res.json({ code: code });
-            }
-            
-            // تنظيف الملفات المؤقتة بعد فترة لعدم ملء مساحة السيرفر
-            setTimeout(() => {
-                if (fs.existsSync(authPath)) {
-                    fs.rmSync(authPath, { recursive: true, force: true });
-                }
-            }, 30000);
+    // إدارة الاتصال
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
+        if (connection === 'close') {
+            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+            if (shouldReconnect) startFaresBot();
+        } else if (connection === 'open') {
+            console.log('✅ تم ربط فارس بوت بنجاح!');
         }
-    } catch (err) {
-        console.error("Pairing Error:", err);
-        if (!res.headersSent) {
-            res.status(500).json({ error: 'فشل في الاتصال، تأكد من الرقم وحاول مجدداً' });
+    });
+
+    // استقبال طلبات الربط من الموقع
+    app.get('/pair', async (req, res) => {
+        let num = req.query.number;
+        if (!num) return res.status(400).json({ error: "الرجاء إدخال الرقم" });
+
+        try {
+            // تنظيف الرقم من أي رموز زائدة
+            num = num.replace(/[^0-9]/g, '');
+            
+            // طلب كود الربط من واتساب
+            let code = await sock.requestPairingCode(num);
+            res.json({ code: code });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: "فشل طلب الكود.. تأكد من حالة السيرفر" });
         }
-    }
+    });
 }
 
-app.get('/pair', getPairingCode);
-app.get('/api/pairing', getPairingCode);
-
-app.get('/', (req, res) => {
-    res.send("Fares Bot API is Online 👑");
-});
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+    startFaresBot();
 });
