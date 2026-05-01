@@ -1,7 +1,7 @@
 {
-  "name": "fares-bot",
-  "version": "1.0.0",
-  "description": "Fares Bot Pairing",
+  "name": "fares-bot-official",
+  "version": "1.1.0",
+  "description": "Fares Bot High Performance Pairing",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
