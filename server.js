@@ -68,3 +68,13 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
 });
+const socket = makeWASocket({
+    auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" })),
+    },
+    printQRInTerminal: false,
+    logger: pino({ level: "fatal" }),
+    // أضف هذا السطر أدناه لتعريف المتصفح
+    browser: ["Ubuntu", "Chrome", "20.0.04"] 
+});
