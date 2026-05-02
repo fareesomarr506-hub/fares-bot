@@ -64,4 +64,15 @@ app.get('/pair', async (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    const socket = makeWASocket({
+    auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" })),
+    },
+    printQRInTerminal: false,
+    logger: pino({ level: "fatal" }),
+    // تحديث بيانات المتصفح بناءً على صورتك
+    browser: ["Android 13", "Chrome", "147.0.7727.137"] 
+});
+
 });
