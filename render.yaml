@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: fares-telegram-bridge
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    autoDeploy: true
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: PAIR_API_URL
+        value: https://fares-bot.onrender.com/pair
+      - key: PAIR_API_METHOD
+        value: GET
+      - key: PAIR_API_NUMBER_FIELD
+        value: phone
+      - key: PAIR_API_RESPONSE_FIELD
+        value: code
+      - key: REQUEST_TIMEOUT
+        value: 30
+      - key: MAX_RETRIES
+        value: 3
+      - key: PYTHON_VERSION
+        value: 3.11.11
