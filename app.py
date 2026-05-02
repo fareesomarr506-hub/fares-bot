@@ -26,7 +26,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("fares_render_bot")
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
+BOT_TOKEN = os.getenv("8409762345:AAFo05jz8ICmkjJ098FSrGt8MGov4nWFPJo", "").strip()
 PAIR_API_URL = os.getenv("PAIR_API_URL", "https://fares-bot.onrender.com/pair").strip()
 PAIR_API_METHOD = os.getenv("PAIR_API_METHOD", "GET").strip().upper()
 PAIR_API_NUMBER_FIELD = os.getenv("PAIR_API_NUMBER_FIELD", "phone").strip()
