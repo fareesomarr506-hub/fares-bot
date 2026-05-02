@@ -25,7 +25,6 @@
             color: #fff;
         }
 
-        /* خلفية متحركة تشبه المواقع الاحترافية */
         body::before {
             content: '';
             position: absolute;
@@ -53,6 +52,7 @@
             max-width: 450px;
             text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            z-index: 1;
         }
 
         .logo-area i {
@@ -103,9 +103,14 @@
             box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             transform: translateY(-3px);
             box-shadow: 0 15px 25px rgba(0, 210, 255, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         #result {
@@ -117,18 +122,19 @@
         .pairing-code {
             background: #fff;
             color: #000;
-            padding: 20px;
+            padding: 15px;
             border-radius: 15px;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 800;
-            letter-spacing: 8px;
+            letter-spacing: 4px;
             margin: 15px 0;
-            display: inline-block;
+            display: block;
             width: 100%;
+            text-transform: uppercase;
         }
 
-        .status { margin-top: 15px; font-size: 12px; }
-        .loading { display: none; color: #00d2ff; margin-bottom: 15px; }
+        .status { margin-top: 15px; font-size: 12px; color: #00d2ff; }
+        .loading { display: none; color: #00d2ff; margin-bottom: 15px; font-weight: 600; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -146,59 +152,78 @@
     <p>أدخل رقمك لربط الجهاز بالسيرفر السحابي</p>
 
     <div class="input-box">
-        <input type="text" id="number" placeholder="9665xxxxxxxx">
+        <input type="text" id="number" placeholder="مثال: 96777xxxxxxx">
     </div>
 
     <div class="loading" id="loader">
-        <i class="fas fa-circle-notch fa-spin"></i> جاري توليد الكود...
+        <i class="fas fa-circle-notch fa-spin"></i> جاري استلام الكود من السيرفر...
     </div>
 
     <button id="submitBtn" onclick="sendPairingRequest()">الحصول على الكود</button>
 
     <div id="result">
-        <p>أدخل هذا الكود في هاتفك:</p>
+        <p style="margin-bottom: 10px; color: #fff;">أدخل هذا الكود في هاتفك:</p>
         <div class="pairing-code" id="code"></div>
         <div class="status">
-            <i class="fas fa-info-circle"></i> اذهب إلى الأجهزة المرتبطة > ربط برقم الهاتف
+            <i class="fas fa-info-circle"></i> اذهب إلى: الأجهزة المرتبطة > ربط جهاز > الربط برقم الهاتف
         </div>
     </div>
-    <div id="error" style="color: #ff4b2b; margin-top: 15px; font-size: 13px;"></div>
+    <div id="error" style="color: #ff4b2b; margin-top: 15px; font-size: 13px; font-weight: 600;"></div>
 </div>
 
 <script>
     async function sendPairingRequest() {
-        const number = document.getElementById('number').value;
+        const numberInput = document.getElementById('number');
         const btn = document.getElementById('submitBtn');
         const loader = document.getElementById('loader');
         const result = document.getElementById('result');
         const error = document.getElementById('error');
         const codeDisplay = document.getElementById('code');
 
+        let number = numberInput.value.replace(/[^0-9]/g, '');
+
         if (!number || number.length < 8) {
-            error.innerText = "يرجى إدخال رقم صحيح";
+            error.innerText = "⚠️ يرجى إدخال رقم هاتف صحيح مع رمز الدولة";
             return;
         }
 
+        // تصفير الواجهة قبل الطلب
         error.innerText = "";
-        btn.style.display = "none";
+        result.style.display = "none";
+        btn.disabled = true;
+        btn.innerText = "جاري الاتصال...";
         loader.style.display = "block";
 
         try {
-            // استهداف الـ API الخاص بك في Render
-            const response = await fetch(`https://fares-bot.onrender.com/pair?number=${number}`);
+            // استخدام الرابط الخاص بك مباشرة مع دعم المسار الصحيح
+            const apiUrl = `https://fares-bot.onrender.com/pair?phone=${number}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error("السيرفر لا يستجيب حالياً");
+
             const data = await response.json();
 
             if (data.code) {
                 codeDisplay.innerText = data.code;
                 result.style.display = "block";
                 loader.style.display = "none";
-            } else {
-                throw new Error(data.error);
+                btn.style.display = "none";
+            } else if (data.error) {
+                error.innerText = "❌ " + data.error;
+                loader.style.display = "none";
+                btn.disabled = false;
+                btn.innerText = "إعادة المحاولة";
             }
         } catch (err) {
-            error.innerText = "فشل الاتصال بالسيرفر، تأكد من تشغيل Render";
-            btn.style.display = "block";
+            console.error("Fetch Error:", err);
+            error.innerText = "⚠️ تعذر الاتصال بالسيرفر. تأكد أن خدمة Render قيد التشغيل (Live).";
             loader.style.display = "none";
+            btn.disabled = false;
+            btn.innerText = "إعادة المحاولة";
         }
     }
 </script>
