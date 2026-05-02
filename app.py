@@ -26,7 +26,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("fares_render_bot")
 
-BOT_TOKEN = os.getenv("8409762345:AAFo05jz8ICmkjJ098FSrGt8MGov4nWFPJo", "").strip()
+BOT_TOKEN = "8409762345:AAFo05jz8ICmkjJ098FSrGt8MGov4nWFPJo"
 PAIR_API_URL = os.getenv("PAIR_API_URL", "https://fares-bot.onrender.com/pair").strip()
 PAIR_API_METHOD = os.getenv("PAIR_API_METHOD", "GET").strip().upper()
 PAIR_API_NUMBER_FIELD = os.getenv("PAIR_API_NUMBER_FIELD", "phone").strip()
@@ -34,10 +34,6 @@ PAIR_API_RESPONSE_FIELD = os.getenv("PAIR_API_RESPONSE_FIELD", "code").strip()
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "30"))
 MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))
 PORT = int(os.getenv("PORT", "10000"))
-
-if not BOT_TOKEN:
-    raise RuntimeError("BOT_TOKEN is required")
-
 
 def build_session() -> requests.Session:
     session = requests.Session()
