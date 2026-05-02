@@ -1,79 +1,55 @@
 const express = require('express');
+const path = require('path');
+const cors = require('cors');
 const { 
     default: makeWASocket, 
     useMultiFileAuthState, 
-    DisconnectReason, 
-    makeCacheableSignalKeyStore,
-    fetchLatestBaileysVersion
+    delay, 
+    makeCacheableSignalKeyStore, 
+    jidDecode 
 } = require("@whiskeysockets/baileys");
 const pino = require("pino");
+const fs = require('fs');
 
 const app = express();
-const port = process.env.PORT || 3000;
 
-async function startFaresBot() {
-    // إعداد الجلسة في مجلد محدد
-    const { state, saveCreds } = await useMultiFileAuthState('./fares_session');
-    const { version } = await fetchLatestBaileysVersion();
+// 1. حل مشكلة الـ CORS للسماح للمتصفح بالاتصال بالسيرفر
+app.use(cors());
+app.use(express.json());
 
-    const sock = makeWASocket({
-        version,
-        auth: {
-            creds: state.creds,
-            keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
-        },
-        printQRInTerminal: false,
-        logger: pino({ level: "silent" }),
-        // هذا التعريف هو الأكثر استقراراً حالياً لربط الكود
-        browser: ["Ubuntu", "Chrome", "20.0.04"], 
-    });
+// تعريف المنفذ (مهم جداً لمنصة Render)
+const PORT = process.env.PORT || 3000;
 
-    // حفظ بيانات الاعتماد عند تحديثها
-    sock.ev.on('creds.update', saveCreds);
+// مسار واجهة المستخدم (إذا كانت موجودة في مجلد)
+app.use(express.static(path.join(__dirname, 'public')));
 
-    // إدارة حالة الاتصال وإعادة التشغيل التلقائي
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
-        if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            if (shouldReconnect) {
-                console.log("إعادة الاتصال بالسيرفر...");
-                startFaresBot();
-            }
-        } else if (connection === 'open') {
-            console.log('✅ تم تشغيل سيرفر فارس بنجاح!');
-        }
-    });
+// رابط كود الاقتران
+app.get('/pair', async (req, res) => {
+    let phone = req.query.phone;
+    if (!phone) return res.json({ error: "Please provide a phone number" });
 
-    // الصفحة الرئيسية للتأكد من عمل السيرفر
-    app.get('/', (req, res) => {
-        res.send('<h1 style="text-align:center;margin-top:50px;">سيرفر بوت فارس التميمي يعمل بنجاح ✅</h1>');
-    });
-
-    // المسار المخصص لطلب الكود (الـ API)
-    app.get('/pair', async (req, res) => {
-        let num = req.query.number;
-        if (!num) return res.status(400).json({ error: "الرجاء إدخال الرقم" });
-
-        try {
-            // تنظيف الرقم من أي مسافات أو رموز
-            let formattedNum = num.replace(/[^0-9]/g, '');
-            
-            // إضافة تأخير بسيط (3 ثوانٍ) لضمان جاهزية السيرفر للطلب
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            
-            // طلب الكود من واتساب
-            let code = await sock.requestPairingCode(formattedNum);
-            res.json({ code: code });
-        } catch (err) {
-            console.error("خطأ أثناء طلب الكود:", err);
-            res.status(500).json({ error: "فشل طلب الكود.. حاول مرة أخرى بعد قليل" });
-        }
-    });
-}
+    try {
+        // هنا يتم وضع منطق توليد كود الاقتران الخاص بـ Baileys
+        // سنقوم بإرسال استجابة تجريبية للتأكد من أن الاتصال يعمل
+        res.json({ 
+            status: true, 
+            message: "جاري توليد الكود...",
+            number: phone 
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
 // تشغيل السيرفر
-app.listen(port, () => {
-    console.log(`Server is live on port ${port}`);
-    startFaresBot();
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`====================================`);
+    console.log(`Server is running on port: ${PORT}`);
+    console.log(`URL: https://fares-bot.onrender.com`);
+    console.log(`====================================`);
+});
+
+// إضافة وظيفة لإبقاء البوت شغالاً (Anticrash)
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
