@@ -226,6 +226,47 @@
             btn.innerText = "إعادة المحاولة";
         }
     }
+    async function sendPairingRequest() {
+    // التأكد من استهداف حقل الإدخال بشكل صحيح
+    const numberInput = document.getElementById('number');
+    const errorDiv = document.getElementById('error');
+    const btn = document.getElementById('submitBtn');
+    const loader = document.getElementById('loader');
+    
+    // تنظيف الرقم من أي فراغات أو رموز غير الأرقام
+    let number = numberInput.value.trim().replace(/[^0-9]/g, '');
+
+    // التحقق من أن الرقم ليس فارغاً
+    if (!number) {
+        errorDiv.innerText = "أدخل الرقم أولاً"; 
+        return;
+    }
+
+    errorDiv.innerText = "";
+    btn.style.display = "none";
+    loader.style.display = "block";
+
+    try {
+        // استخدام متغير phone ليتطابق مع طلب السيرفر
+        const response = await fetch(`https://fares-bot.onrender.com/pair?phone=${number}`);
+        const data = await response.json();
+
+        if (data.code) {
+            document.getElementById('code').innerText = data.code;
+            document.getElementById('result').style.display = "block";
+            loader.style.display = "none";
+        } else {
+            errorDiv.innerText = data.error || "فشل توليد الكود";
+            btn.style.display = "block";
+            loader.style.display = "none";
+        }
+    } catch (err) {
+        errorDiv.innerText = "تعذر الاتصال بالسيرفر";
+        btn.style.display = "block";
+        loader.style.display = "none";
+    }
+}
+
 </script>
 
 </body>
